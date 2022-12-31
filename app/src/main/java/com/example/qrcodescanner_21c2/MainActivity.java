@@ -3,7 +3,9 @@ package com.example.qrcodescanner_21c2;
 import androidx.appcompat.app.AppCompatActivity;
 
 import android.content.Intent;
+import android.net.Uri;
 import android.os.Bundle;
+import android.util.Patterns;
 import android.view.View;
 import android.widget.Button;
 import android.widget.TextView;
@@ -49,7 +51,20 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             //jika qrcode tidak ada sama sekali
             if (result.getContents() == null) {
                 Toast.makeText(this, "Hasil SCANNING tidak ada", Toast.LENGTH_LONG).show();
-            }else {
+            }else if (Patterns.WEB_URL.matcher(result.getContents()).matches()) {
+                Intent visitUrl = new Intent(Intent.ACTION_VIEW, Uri.parse(result.getContents()));
+                startActivity(visitUrl);
+            }else if (Patterns.PHONE.matcher(result.getContents()).matches()) {
+                String number = String.valueOf(result.getContents());
+                Intent callIntent = new Intent(Intent.ACTION_CALL);
+                callIntent.setData(Uri.parse("tel:" + number));
+                startActivity(callIntent);
+                try {
+                    startActivity(Intent.createChooser(callIntent, "waiting..."));
+                } catch (android.content.ActivityNotFoundException e) {
+                    Toast.makeText(MainActivity.this, "There is no phone apk client installed", Toast.LENGTH_LONG).show();
+                }
+            }else{
                 //jika qrcode ada/ditemukan datanya
                 try {
                     //Konversi datanya ke json
