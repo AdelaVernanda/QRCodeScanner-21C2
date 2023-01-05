@@ -77,6 +77,12 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                     e.printStackTrace();
                     Toast.makeText(this, result.getContents(), Toast.LENGTH_LONG).show();
                 }
+                String lokasiku = String.valueOf(result.getContents());
+                Uri gmmIntentUri = Uri.parse(lokasiku);
+                Intent mapIntent = new Intent((Intent.ACTION_VIEW), gmmIntentUri);
+
+                mapIntent.setPackage("com.google.android.apps.maps");
+                startActivity(mapIntent);
             }
         } else {
             super.onActivityResult(requestCode, resultCode, data);
