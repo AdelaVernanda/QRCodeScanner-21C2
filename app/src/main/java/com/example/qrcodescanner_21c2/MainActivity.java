@@ -1,12 +1,17 @@
 package com.example.qrcodescanner_21c2;
 
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.core.app.ActivityCompat;
+import androidx.core.content.ContextCompat;
 
+import android.Manifest;
 import android.content.Intent;
+import android.content.pm.PackageManager;
 import android.net.Uri;
 import android.os.Bundle;
 import android.util.Patterns;
 import android.view.View;
+import android.view.accessibility.AccessibilityManager;
 import android.widget.Button;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -54,17 +59,32 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             }else if (Patterns.WEB_URL.matcher(result.getContents()).matches()) {
                 Intent visitUrl = new Intent(Intent.ACTION_VIEW, Uri.parse(result.getContents()));
                 startActivity(visitUrl);
-            }else if (Patterns.PHONE.matcher(result.getContents()).matches()) {
-                String number = String.valueOf(result.getContents());
-                Intent callIntent = new Intent(Intent.ACTION_CALL);
-                callIntent.setData(Uri.parse("tel:" + number));
-                startActivity(callIntent);
-                try {
-                    startActivity(Intent.createChooser(callIntent, "waiting..."));
-                } catch (android.content.ActivityNotFoundException e) {
-                    Toast.makeText(MainActivity.this, "There is no phone apk client installed", Toast.LENGTH_LONG).show();
-                }
-            }else{
+            }else if (result.getContents().contains("tel:")) {
+                //Mendapat data kode telpon
+                Intent intent = new Intent(Intent.ACTION_DIAL, Uri.parse(result.getContents()));
+                startActivity(intent);
+
+                String lokasiku = String.valueOf(result.getContents());
+                Uri gmmIntentUri = Uri.parse(lokasiku);
+                Intent mapIntent = new Intent((Intent.ACTION_VIEW), gmmIntentUri);
+
+                mapIntent.setPackage("com.google.android.apps.maps");
+                startActivity(mapIntent);
+            }
+            String alamat = result.getContents();
+            String at = "@gmail";
+
+            if(alamat.contains(at)) {
+                Intent intent = new Intent(Intent.ACTION_SEND);
+                String[] recipients = {alamat.replace("http://", "")};
+                intent.putExtra(Intent.EXTRA_EMAIL, recipients);
+                intent.putExtra(Intent.EXTRA_SUBJECT, "Subject Email");
+                intent.putExtra(Intent.EXTRA_TEXT, "Type Here");
+                intent.putExtra(Intent.EXTRA_CC, "");
+                intent.setType("text/html");
+                intent.setPackage("com.google.android.gm");
+                startActivity(Intent.createChooser(intent, "Send mail"));
+            } else{
                 //jika qrcode ada/ditemukan datanya
                 try {
                     //Konversi datanya ke json
@@ -77,12 +97,6 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                     e.printStackTrace();
                     Toast.makeText(this, result.getContents(), Toast.LENGTH_LONG).show();
                 }
-                String lokasiku = String.valueOf(result.getContents());
-                Uri gmmIntentUri = Uri.parse(lokasiku);
-                Intent mapIntent = new Intent((Intent.ACTION_VIEW), gmmIntentUri);
-
-                mapIntent.setPackage("com.google.android.apps.maps");
-                startActivity(mapIntent);
             }
         } else {
             super.onActivityResult(requestCode, resultCode, data);
